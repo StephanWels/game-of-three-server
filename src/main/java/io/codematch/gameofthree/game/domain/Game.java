@@ -47,7 +47,7 @@ public abstract class Game {
 
 	private static void validateInitialValue(int startGameValue) {
 		if (startGameValue <= 1) {
-			throw new RuntimeException("%s is not a valid starting value. Has to be greate than 1");
+			throw new IllegalArgumentException("%s is not a valid starting value. Has to be greate than 1");
 		}
 	}
 

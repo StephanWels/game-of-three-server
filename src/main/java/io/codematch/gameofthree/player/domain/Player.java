@@ -27,7 +27,7 @@ public abstract class Player {
 
 	private static void rejectOffensiveUsernames(@NotNull String name) {
 		if (name.contains("porn")){
-			throw new RuntimeException(String.format("Sorry, %s - not for you", name));
+			throw new IllegalArgumentException(String.format("Sorry, %s - not for you", name));
 		}
 	}
 
