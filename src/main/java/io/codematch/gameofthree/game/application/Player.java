@@ -9,4 +9,6 @@ public interface Player {
 	UUID getId();
 
 	String getName();
+
+	boolean isAutomaticTurns();
 }

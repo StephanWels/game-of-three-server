@@ -51,7 +51,7 @@ public class GameController {
 	@PutMapping("/{gameId}")
 	@ResponseStatus(HttpStatus.OK)
 	public Game joinGame(@PathVariable("gameId") UUID gameId, @RequestBody GameJoinRequest gameJoinRequest) {
-		final ImmutablePlayer joiningPlayer = ImmutablePlayer.builder().id(gameJoinRequest.getPlayerId()).name(gameJoinRequest.getPlayerName())
+		final ImmutablePlayer joiningPlayer = ImmutablePlayer.builder().id(gameJoinRequest.getPlayerId()).name(gameJoinRequest.getPlayerName()).isAutomaticTurns(gameJoinRequest.isAutomaticTurns())
 				.build();
 		return this.gameService.joinGame(gameId, joiningPlayer);
 	}

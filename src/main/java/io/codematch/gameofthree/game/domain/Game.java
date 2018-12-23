@@ -13,7 +13,9 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import io.codematch.gameofthree.game.application.GameTurn;
+import io.codematch.gameofthree.game.application.ImmutableGameTurn;
 import io.codematch.gameofthree.game.application.Player;
+import sun.plugin.dom.exception.InvalidStateException;
 
 @Immutable
 @JsonSerialize(as = ImmutableGame.class)
@@ -62,12 +64,37 @@ public abstract class Game {
 		} else {
 			winner = Optional.empty();
 		}
-		return ImmutableGame.copyOf(this).withGameValue(newGameValue).withGameTurns(newGameTurns).withWinner(winner);
+
+		final ImmutableGame gameAfterTurn = ImmutableGame.copyOf(this).withGameValue(newGameValue).withGameTurns(newGameTurns).withWinner(winner);
+		return gameAfterTurn.takeAutomaticTurns();
+	}
+
+	Game takeAutomaticTurns() {
+		if (gameHasEnded() || gameIsWaitingForPlayers()) {
+			return this;
+		}
+		final Optional<Player> automaticPlayerTakingTurn = getPlayers().stream().filter(player -> isPlayerAllowedToTakeTurn(player.getId()))
+				.filter(Player::isAutomaticTurns).findFirst();
+		return automaticPlayerTakingTurn
+				.map(player -> this.takeTurn(ImmutableGameTurn.builder().playerId(player.getId()).move(determineNextAutoMove()).build()))
+				.orElse(this).takeAutomaticTurns();
+	}
+
+	private int determineNextAutoMove() {
+		switch (getGameValue() % 3) {
+		case 0:
+			return 0;
+		case 1:
+			return -1;
+		case 2:
+			return 1;
+		default:
+			throw new InvalidStateException("AI Player failed to calculate turn");
+		}
 	}
 
 	private void validateTurnIsValidOrThrow(GameTurn turn) {
-		final boolean correctPlayerTakesTurn =
-				getGameTurns().isEmpty() || !getGameTurns().get(getGameTurns().size() - 1).getPlayerId().equals(turn.getPlayerId());
+		final boolean correctPlayerTakesTurn = isPlayerAllowedToTakeTurn(turn.getPlayerId());
 		if (!correctPlayerTakesTurn) {
 			throw new IllegalArgumentException("Not your turn!");
 		}
@@ -75,14 +102,28 @@ public abstract class Game {
 		if (!playerHasJoinedTheGame) {
 			throw new IllegalArgumentException("You havn't joined the game yet!");
 		}
-		final boolean gameHasAlreadyEnded = getGameValue() == 1;
-		if (gameHasAlreadyEnded) {
+		if (gameHasEnded()) {
 			throw new IllegalArgumentException("Game has already ended");
 		}
 		final boolean resultingValueIsMultipleOfThree = ((getGameValue() + turn.getMove()) % 3) == 0;
 		if (!resultingValueIsMultipleOfThree) {
 			throw new IllegalArgumentException("Game turn is not valid - Resulting value is not a multiple of three!");
 		}
+		if (gameIsWaitingForPlayers()) {
+			throw new IllegalArgumentException("Two players are needed before starting the game.");
+		}
+	}
+
+	private boolean gameIsWaitingForPlayers() {
+		return getPlayers().size() != 2;
+	}
+
+	private boolean gameHasEnded() {
+		return getGameValue() == 1;
+	}
+
+	private boolean isPlayerAllowedToTakeTurn(UUID playerId) {
+		return getGameTurns().isEmpty() || !getGameTurns().get(getGameTurns().size() - 1).getPlayerId().equals(playerId);
 	}
 
 	public Game addPlayer(Player player) {

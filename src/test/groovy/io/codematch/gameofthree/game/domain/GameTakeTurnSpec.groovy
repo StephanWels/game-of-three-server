@@ -8,9 +8,9 @@ import spock.lang.Specification
 
 class GameTakeTurnSpec extends Specification {
 
-    Player player1 = ImmutablePlayer.builder().name('Player 1').id(UUID.randomUUID()).build()
-    Player player2 = ImmutablePlayer.builder().name('Player 2').id(UUID.randomUUID()).build()
-    Player player3 = ImmutablePlayer.builder().name('Player 3').id(UUID.randomUUID()).build()
+    Player player1 = ImmutablePlayer.builder().name('Player 1').isAutomaticTurns(false).id(UUID.randomUUID()).build()
+    Player player2 = ImmutablePlayer.builder().name('Player 2').isAutomaticTurns(false).id(UUID.randomUUID()).build()
+    Player player3 = ImmutablePlayer.builder().name('Player 3').isAutomaticTurns(false).id(UUID.randomUUID()).build()
     Game newGameWithTwoPlayers = Game.newGame('Game name', 6).addPlayer(player1).addPlayer(player2)
 
     def 'take turn appends a new turn and updates the game value if legit'() {
@@ -85,5 +85,30 @@ class GameTakeTurnSpec extends Specification {
         then:
         def exception = thrown(IllegalArgumentException)
         exception.message == 'Game has already ended'
+    }
+
+    def 'cannot take turn before a exactly two players joined the game'() {
+        given: 'a game, where there is only one player'
+        Game game = Game.newGame('Game name', 6).addPlayer(player1)
+
+        when:
+        game.takeTurn(ImmutableGameTurn.builder().move(0).playerId(player1.id).build())
+
+        then:
+        def exception = thrown(IllegalArgumentException)
+        exception.message == 'Two players are needed before starting the game.'
+    }
+
+    def 'Turns for players with automatic turns option activated will be determined by the game itself'() {
+        given: 'a game, with one manual and one automatic player'
+        Player autoPlayer = ImmutablePlayer.builder().name('Auto player').id(UUID.randomUUID()).isAutomaticTurns(true).build()
+        Game game = Game.newGame('Game name', 6).addPlayer(player1).addPlayer(autoPlayer)
+
+        when:
+        Game gameAfterTurn = game.takeTurn(ImmutableGameTurn.builder().move(0).playerId(player1.id).build())
+
+        then:
+        gameAfterTurn.gameTurns.size() == 2
+        gameAfterTurn.winner.get() == autoPlayer;
     }
 }

@@ -12,4 +12,5 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 public interface GameJoinRequest {
 	UUID getPlayerId();
 	String getPlayerName();
+	boolean isAutomaticTurns();
 }

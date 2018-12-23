@@ -1,7 +1,6 @@
 package io.codematch.gameofthree.game.domain
 
-import io.codematch.gameofthree.game.application.GameTurn
-import io.codematch.gameofthree.game.application.ImmutableGameTurn
+
 import io.codematch.gameofthree.game.application.ImmutablePlayer
 import io.codematch.gameofthree.game.application.Player
 import spock.lang.Specification
