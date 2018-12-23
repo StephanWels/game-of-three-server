@@ -60,7 +60,7 @@ public abstract class Game {
 
 		final Optional<Player> winner;
 		if (newGameValue == 1) {
-			winner = getPlayers().stream().filter(player -> player.getId().equals(gameTurn.getPlayerId())).findFirst();
+			winner = getPlayers().stream().filter(player -> player.getId().equals(gameTurn.getPlayer().getId())).findFirst();
 		} else {
 			winner = Optional.empty();
 		}
@@ -76,8 +76,8 @@ public abstract class Game {
 		final Optional<Player> automaticPlayerTakingTurn = getPlayers().stream().filter(player -> isPlayerAllowedToTakeTurn(player.getId()))
 				.filter(Player::isAutomaticTurns).findFirst();
 		return automaticPlayerTakingTurn
-				.map(player -> this.takeTurn(ImmutableGameTurn.builder().playerId(player.getId()).move(determineNextAutoMove()).build()))
-				.orElse(this).takeAutomaticTurns();
+				.map(player -> this.takeTurn(ImmutableGameTurn.builder().player(player).move(determineNextAutoMove()).build()).takeAutomaticTurns())
+				.orElse(this);
 	}
 
 	private int determineNextAutoMove() {
@@ -94,11 +94,11 @@ public abstract class Game {
 	}
 
 	private void validateTurnIsValidOrThrow(GameTurn turn) {
-		final boolean correctPlayerTakesTurn = isPlayerAllowedToTakeTurn(turn.getPlayerId());
+		final boolean correctPlayerTakesTurn = isPlayerAllowedToTakeTurn(turn.getPlayer().getId());
 		if (!correctPlayerTakesTurn) {
 			throw new IllegalArgumentException("Not your turn!");
 		}
-		final boolean playerHasJoinedTheGame = getPlayers().stream().map(Player::getId).anyMatch(turn.getPlayerId()::equals);
+		final boolean playerHasJoinedTheGame = getPlayers().stream().map(Player::getId).anyMatch(turn.getPlayer().getId()::equals);
 		if (!playerHasJoinedTheGame) {
 			throw new IllegalArgumentException("You havn't joined the game yet!");
 		}
@@ -123,13 +123,13 @@ public abstract class Game {
 	}
 
 	private boolean isPlayerAllowedToTakeTurn(UUID playerId) {
-		return getGameTurns().isEmpty() || !getGameTurns().get(getGameTurns().size() - 1).getPlayerId().equals(playerId);
+		return getGameTurns().isEmpty() || !getGameTurns().get(getGameTurns().size() - 1).getPlayer().getId().equals(playerId);
 	}
 
 	public Game addPlayer(Player player) {
 		validatePlayerCanJoinOrThrow(player.getId());
 		final List<Player> newPlayerList = Stream.concat(getPlayers().stream(), Stream.of(player)).collect(Collectors.toList());
-		return ImmutableGame.copyOf(this).withPlayers(newPlayerList);
+		return ImmutableGame.copyOf(this).withPlayers(newPlayerList).takeAutomaticTurns();
 	}
 
 	private void validatePlayerCanJoinOrThrow(UUID playerId) {
