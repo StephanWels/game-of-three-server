@@ -1,0 +1,31 @@
+spring:
+  cloud:
+    stream:
+      bindings:
+        gameInput:
+          destination: games
+          group: game-of-three-backend-${random.uuid}
+          contentType: application/json
+          consumer:
+            auto-offset-reset: earliest
+            enable-auto-commit: true
+        gameOutput:
+          contentType: application/json
+          destination: games
+
+        playerInput:
+          destination: players
+          group: game-of-three-backend-${random.uuid}
+          contentType: application/json
+          consumer:
+            auto-offset-reset: earliest
+            enable-auto-commit: true
+        playerOutput:
+          contentType: application/json
+          destination: players
+
+      kafka:
+        binder:
+          brokers: 127.0.0.1:9092
+          autoCreateTopics: false
+          autoAddPartitions: false

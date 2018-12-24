@@ -21,7 +21,6 @@
     <spring-spock.version>1.2-groovy-2.5</spring-spock.version>
   </properties>
   <build>
-    <testSourceDirectory>src/test/groovy</testSourceDirectory>
     <plugins>
       <plugin>
         <groupId>org.springframework.boot</groupId>
@@ -30,7 +29,7 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>build-helper-maven-plugin</artifactId>
-        <version>1.7</version>
+        <version>1.12</version>
         <executions>
           <execution>
             <id>add-source</id>
@@ -40,7 +39,20 @@
             </goals>
             <configuration>
               <sources>
-                <source>generated-sources</source>
+                <source>target/generated-sources-annotations</source>
+              </sources>
+            </configuration>
+          </execution>
+          <execution>
+            <id>add-test-source</id>
+            <phase>generate-test-sources</phase>
+            <goals>
+              <goal>add-test-source</goal>
+            </goals>
+            <configuration>
+              <sources>
+                <source>src/test/groovy</source>
+                <source>src/test-integration/groovy</source>
               </sources>
             </configuration>
           </execution>
@@ -55,6 +67,27 @@
             <include>**/*Spec.*</include>
           </includes>
         </configuration>
+      </plugin>
+      <!-- Maven Failsafe Plugin: http://maven.apache.org/surefire/maven-failsafe-plugin/ -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <version>${maven-failsafe-plugin.version}</version>
+        <configuration>
+          <!-- Sets the VM argument line used when integration tests are run. -->
+          <argLine>${argLine}</argLine>
+          <includes>
+            <include>**/*IntegrationSpec.*</include>
+          </includes>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>integration-test</goal>
+              <goal>verify</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
       <plugin>
         <groupId>org.codehaus.gmavenplus</groupId>

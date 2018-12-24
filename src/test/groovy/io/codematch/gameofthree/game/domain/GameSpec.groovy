@@ -3,6 +3,7 @@ package io.codematch.gameofthree.game.domain
 
 import io.codematch.gameofthree.game.application.ImmutablePlayer
 import io.codematch.gameofthree.game.application.Player
+import io.codematch.gameofthree.game.domain.Game
 import spock.lang.Specification
 import spock.lang.Unroll
 

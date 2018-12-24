@@ -48,7 +48,7 @@ public class GameController {
 		return this.gameService.findGame(gameId);
 	}
 
-	@PutMapping("/{gameId}")
+	@PutMapping("/{gameId}/players")
 	@ResponseStatus(HttpStatus.OK)
 	public Game joinGame(@PathVariable("gameId") UUID gameId, @RequestBody GameJoinRequest gameJoinRequest) {
 		final ImmutablePlayer joiningPlayer = ImmutablePlayer.builder().id(gameJoinRequest.getPlayerId()).name(gameJoinRequest.getPlayerName()).isAutomaticTurns(gameJoinRequest.isAutomaticTurns())
@@ -56,7 +56,8 @@ public class GameController {
 		return this.gameService.joinGame(gameId, joiningPlayer);
 	}
 
-	@PostMapping("/{gameId}/turns")
+	@PutMapping("/{gameId}/turns")
+	@ResponseStatus(HttpStatus.OK)
 	public ResponseEntity<Game> takeTurn(@PathVariable UUID gameId, @RequestBody GameTurn gameTurn) {
 		return ResponseEntity.ok(gameService.takeTurn(gameId, gameTurn));
 	}

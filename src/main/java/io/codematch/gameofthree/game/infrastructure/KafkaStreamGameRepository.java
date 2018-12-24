@@ -5,20 +5,32 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Stream;
 
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cloud.stream.annotation.EnableBinding;
+import org.springframework.cloud.stream.annotation.StreamListener;
+import org.springframework.integration.support.MutableMessage;
+import org.springframework.messaging.MessageChannel;
 import org.springframework.stereotype.Component;
 
 import io.codematch.gameofthree.game.domain.Game;
 import io.codematch.gameofthree.game.domain.GameRepository;
 
 @Component
+@EnableBinding(GameKafkaBinding.class)
 public class KafkaStreamGameRepository implements GameRepository {
 
-	HashMap<UUID, Game> gameStore = new HashMap<>();
+	private final MessageChannel messageChannel;
 
-	public KafkaStreamGameRepository() {
-		Stream.of(Game.newGame("First Game", 422), Game.newGame("Second Game", 18)).forEach(game -> gameStore.put(game.getId(), game));
+	private final HashMap<UUID, Game> gameStore = new HashMap<>();
+
+	public KafkaStreamGameRepository(@Qualifier(GameKafkaBinding.OUTPUT) MessageChannel messageChannel) {
+		this.messageChannel = messageChannel;
+	}
+
+	@StreamListener(GameKafkaBinding.INPUT)
+	public void handle(Game game) {
+		this.gameStore.put(game.getId(), game);
 	}
 
 	@Override
@@ -33,7 +45,8 @@ public class KafkaStreamGameRepository implements GameRepository {
 
 	@Override
 	public Game save(Game game) {
-		this.gameStore.put(game.getId(), game);
+		this.messageChannel.send(new MutableMessage<Game>(game));
 		return game;
 	}
+
 }

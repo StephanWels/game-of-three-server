@@ -15,7 +15,6 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.codematch.gameofthree.game.application.GameTurn;
 import io.codematch.gameofthree.game.application.ImmutableGameTurn;
 import io.codematch.gameofthree.game.application.Player;
-import sun.plugin.dom.exception.InvalidStateException;
 
 @Immutable
 @JsonSerialize(as = ImmutableGame.class)
@@ -89,7 +88,7 @@ public abstract class Game {
 		case 2:
 			return 1;
 		default:
-			throw new InvalidStateException("AI Player failed to calculate turn");
+			throw new IllegalStateException("AI Player failed to calculate turn");
 		}
 	}
 

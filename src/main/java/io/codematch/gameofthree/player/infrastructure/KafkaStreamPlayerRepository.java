@@ -5,21 +5,32 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Stream;
 
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cloud.stream.annotation.EnableBinding;
+import org.springframework.cloud.stream.annotation.StreamListener;
+import org.springframework.integration.support.MutableMessage;
+import org.springframework.messaging.MessageChannel;
 import org.springframework.stereotype.Component;
 
 import io.codematch.gameofthree.player.domain.Player;
 import io.codematch.gameofthree.player.domain.PlayerRepository;
 
 @Component
+@EnableBinding(PlayerKafkaBinding.class)
 public class KafkaStreamPlayerRepository implements PlayerRepository {
 
-	HashMap<UUID, Player> playerStore = new HashMap<>();
+	private final HashMap<UUID, Player> playerStore = new HashMap<>();
 
-	public KafkaStreamPlayerRepository() {
-		Stream.of(Player.newPlayer("Stephan", "stephan.wels@code-match.io"), Player.newPlayer("Sandra", "sandra.wels@code-match.io"))
-				.forEach(player -> playerStore.put(player.getId(), player));
+	private final MessageChannel messageChannel;
+
+	public KafkaStreamPlayerRepository(@Qualifier(PlayerKafkaBinding.OUTPUT) MessageChannel messageChannel) {
+		this.messageChannel = messageChannel;
+	}
+
+	@StreamListener(PlayerKafkaBinding.INPUT)
+	public void handle(Player player) {
+		this.playerStore.put(player.getId(), player);
 	}
 
 	@Override
@@ -34,7 +45,7 @@ public class KafkaStreamPlayerRepository implements PlayerRepository {
 
 	@Override
 	public Player save(Player player) {
-		playerStore.put(player.getId(), player);
+		this.messageChannel.send(new MutableMessage<Player>(player));
 		return player;
 	}
 }
